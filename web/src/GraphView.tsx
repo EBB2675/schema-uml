@@ -64,14 +64,14 @@ const cleanType = (t?: string | null) => {
 
 const editableCardWidth = (box: CardBox) => Math.max(box.w + 24, 200);
 
-const sameCardBox = (a: CardBox | undefined, b: CardBox | undefined) =>
-  a !== undefined && b !== undefined &&
-  a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+const sameCardBox = (prev: CardBox | undefined, next: CardBox | undefined) =>
+  prev !== undefined && next !== undefined &&
+  prev.x === next.x && prev.y === next.y && prev.w === next.w && prev.h === next.h;
 
-const sameCardBoxMap = (a: Record<string, CardBox>, b: Record<string, CardBox>) => {
-  const ids = Object.keys(a);
-  if (ids.length !== Object.keys(b).length) return false;
-  return ids.every((id) => sameCardBox(a[id], b[id]));
+const sameCardBoxMap = (prev: Record<string, CardBox>, next: Record<string, CardBox>) => {
+  const ids = Object.keys(prev);
+  if (ids.length !== Object.keys(next).length) return false;
+  return ids.every((id) => sameCardBox(prev[id], next[id]));
 };
 
 const connectionPoints = (source: CardBox, target: CardBox) => {
