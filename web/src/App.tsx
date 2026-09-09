@@ -1,6 +1,8 @@
 import type { ChangeEvent, FormEvent, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
 import GraphView, { type GraphExportHandle } from "./GraphView";
 import DocPanel from "./components/DocPanel";
 import OverviewGrid from "./components/OverviewGrid";
@@ -51,9 +53,23 @@ type GraphTaskBody = {
   package: string;
 };
 
+type ExportFilter = {
+  name: string;
+  extensions: string[];
+};
+
 type TaskEnqueueResponse = WorkspaceEnvelope & {
   result?: unknown;
   task_id?: string;
+};
+
+const triggerBrowserDownload = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
 };
 
 export default function App() {
@@ -2205,13 +2221,12 @@ export default function App() {
 
   const exportJson = () => {
     if (!currentGraph) return;
-    const s =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(currentGraph, null, 2));
-    const a = document.createElement("a");
-    a.href = s;
-    a.download = `${currentGraph.package}_${currentGraph.root || "all"}.json`;
-    a.click();
+    void saveExportFile(
+      `${currentGraph.package}_${currentGraph.root || "all"}.json`,
+      new TextEncoder().encode(JSON.stringify(currentGraph, null, 2)),
+      "application/json",
+      [{ name: "JSON", extensions: ["json"] }]
+    );
   };
 
   const handleImportJson = () => {
@@ -2296,6 +2311,25 @@ export default function App() {
     reader.readAsText(file);
   };
 
+  const saveExportFile = useCallback(
+    async (filename: string, data: Uint8Array, mimeType: string, filters: ExportFilter[]) => {
+      try {
+        const selected = await save({
+          defaultPath: filename,
+          filters,
+        });
+        const targetPath = Array.isArray(selected) ? selected[0] : selected;
+        if (!targetPath) return;
+        await writeFile(targetPath, data);
+      } catch {
+        const browserBytes = new Uint8Array(data.byteLength);
+        browserBytes.set(data);
+        triggerBrowserDownload(new Blob([browserBytes], { type: mimeType }), filename);
+      }
+    },
+    []
+  );
+
   const exportPdf = () => {
     if (!currentGraph || !graphHandle) return;
 
@@ -2314,18 +2348,22 @@ export default function App() {
     const y = (pageHeight - h) / 2;
 
     pdf.addImage(png, "PNG", x, y, w, h);
-    pdf.save(`${currentGraph.package}_${currentGraph.root || "all"}.pdf`);
+    void saveExportFile(
+      `${currentGraph.package}_${currentGraph.root || "all"}.pdf`,
+      new Uint8Array(pdf.output("arraybuffer")),
+      "application/pdf",
+      [{ name: "PDF", extensions: ["pdf"] }]
+    );
   };
 
   const exportAuditLog = () => {
     if (!auditTrail.length) return;
-    const blob = new Blob([JSON.stringify(auditTrail, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "schema-uml-audit-log.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    void saveExportFile(
+      "schema-uml-audit-log.json",
+      new TextEncoder().encode(JSON.stringify(auditTrail, null, 2)),
+      "application/json",
+      [{ name: "JSON", extensions: ["json"] }]
+    );
   };
 
   const sendDesign = async () => {

@@ -23,6 +23,8 @@
     "test:contracts": "vitest run tests/contracts.test.ts"
   },
   "dependencies": {
+    "@tauri-apps/plugin-dialog": "^2.7.0",
+    "@tauri-apps/plugin-fs": "^2.5.0",
     "axios": "^1.13.1",
     "cytoscape": "^3.33.1",
     "cytoscape-elk": "^2.3.0",
@@ -35,10 +37,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@tauri-apps/cli": "^2.8.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
-    "@tauri-apps/cli": "^2.8.1",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",

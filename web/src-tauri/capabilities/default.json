@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default desktop capability set for Schema Studio Light.",
+  "remote": {
+    "urls": [
+      "http://127.0.0.1:5179/*",
+      "http://localhost:5179/*"
+    ]
+  },
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "fs:write-files"
+  ]
+}

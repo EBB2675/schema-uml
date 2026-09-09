@@ -542,6 +542,8 @@ fn main() {
     let config_for_window = config.clone();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .setup(move |app| {
             let reusing_existing = ensure_backend_state_before_spawn(&config_for_setup)?;
             if !reusing_existing {
